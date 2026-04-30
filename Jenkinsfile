@@ -46,13 +46,13 @@ pipeline {
                         if (params.ACTION == 'apply') {
                             sh """
                             terraform plan \
-                              -var-file=${params.ENV}.tfvars \
+                              -var-file=envs/${params.ENV}.tfvars \
                               -out=tfplan
                             """
                         } else {
                             sh """
                             terraform plan -destroy \
-                              -var-file=${params.ENV}.tfvars \
+                              -var-file=envs/${params.ENV}.tfvars \
                               -out=tfplan
                             """
                         }
