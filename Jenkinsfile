@@ -31,7 +31,7 @@ pipeline {
         }
 
          // 🔥 ADD THIS STAGE HERE
-        stage('Reset (Optional)') {
+        stage('Reset') {
             when {
                 expression { params.resetInfra == true }
             }
