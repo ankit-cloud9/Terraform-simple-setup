@@ -1,5 +1,5 @@
-resource "aws_secretsmanager_secret" "main" {
-  name = "project/dev/main-secret"
+resource "aws_secretsmanager_secret" "secret/dev" {
+  name = "project/dev/secret"
 }
 
 resource "aws_secretsmanager_secret_version" "main_value" {
