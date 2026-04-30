@@ -30,6 +30,17 @@ pipeline {
             }
         }
 
+        stage('Fix Secret State (One-time)') {
+            steps {
+                dir('terraform') {
+                    sh '''
+                    terraform init -reconfigure
+                    terraform state rm aws_secretsmanager_secret.main || true
+                    '''
+                }
+            }
+        }
+
         stage('Validate') {
             steps {
                 dir('terraform') {
