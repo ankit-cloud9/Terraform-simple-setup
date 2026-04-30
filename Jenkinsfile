@@ -15,7 +15,7 @@ pipeline {
                  script{
                         dir("terraform")
                         {
-                            git "https://github.com/ankit-cloud9/Terraform-simple-setup.git"
+                            git branch: 'main', url: 'https://github.com/ankit-cloud9/Terraform-simple-setup.git'
                         }
                     }
                 }
