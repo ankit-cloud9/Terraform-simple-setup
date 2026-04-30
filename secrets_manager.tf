@@ -1,5 +1,6 @@
-resource "aws_secretsmanager_secret" "secret/dev" {
-  name = "project/dev/secret"
+resource "aws_secretsmanager_secret" "main" {
+  name = "project/dev/secret-v2"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "main_value" {
