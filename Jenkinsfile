@@ -30,26 +30,6 @@ pipeline {
             }
         }
 
-         // 🔥 ADD THIS STAGE HERE
-        stage('Reset') {
-            when {
-                expression { params.resetInfra == true }
-            }
-            steps {
-                dir('terraform') {
-                    sh '''
-                    terraform init -reconfigure
-
-                    terraform apply \
-                      -replace=random_password.db_password \
-                      -replace=aws_db_instance.rds \
-                      -var-file=envs/dev.tfvars \
-                      -auto-approve
-                    '''
-                }
-            }
-        }
-
         stage('Validate') {
             steps {
                 dir('terraform') {
