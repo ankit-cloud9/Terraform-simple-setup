@@ -1,54 +1,107 @@
 pipeline {
 
+    agent any
+
     parameters {
-        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
-    } 
+        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Terraform action')
+        choice(name: 'ENV', choices: ['dev'], description: 'Environment')
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Skip manual approval')
+    }
+
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        TF_VAR_file = "${params.ENV}.tfvars"
     }
 
-   agent  any
     stages {
-        stage('checkout') {
+
+        stage('Checkout') {
             steps {
-                 script{
-                        dir("terraform")
-                        {
-                            git branch: 'main', url: 'https://github.com/ankit-cloud9/Terraform-simple-setup.git'
+                checkout scm   // cleaner than manual git
+            }
+        }
+
+        stage('Init') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init -reconfigure'
+                }
+            }
+        }
+
+        stage('Validate') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform validate'
+                }
+            }
+        }
+
+        stage('Plan') {
+            steps {
+                dir('terraform') {
+
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh """
+                            terraform plan \
+                              -var-file=${params.ENV}.tfvars \
+                              -out=tfplan
+                            """
+                        } else {
+                            sh """
+                            terraform plan -destroy \
+                              -var-file=${params.ENV}.tfvars \
+                              -out=tfplan
+                            """
+                        }
+                    }
+
+                    sh 'terraform show -no-color tfplan > tfplan.txt'
+                }
+            }
+        }
+
+        stage('Approval') {
+            when {
+                allOf {
+                    expression { params.autoApprove == false }
+                }
+            }
+            steps {
+                script {
+                    def plan = readFile 'terraform/tfplan.txt'
+
+                    timeout(time: 5, unit: 'MINUTES') {
+                        input(
+                            message: "Approve Terraform ${params.ACTION}?",
+                            ok: "Proceed",
+                            parameters: [
+                                text(
+                                    name: 'Plan Preview',
+                                    defaultValue: plan.take(5000),
+                                    description: 'Review plan before execution'
+                                )
+                            ]
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Apply / Destroy') {
+            steps {
+                dir('terraform') {
+                    script {
+                        if (params.ACTION == 'apply') {
+                            sh 'terraform apply -input=false tfplan'
+                        } else {
+                            sh 'terraform apply -destroy -input=false tfplan'
                         }
                     }
                 }
             }
-
-        stage('Plan') {
-            steps {
-                sh 'pwd;cd terraform/ ; terraform init'
-                sh "pwd;cd terraform/ ; terraform plan -out tfplan"
-                sh 'pwd;cd terraform/ ; terraform show -no-color tfplan > tfplan.txt'
-            }
-        }
-        stage('Approval') {
-           when {
-               not {
-                   equals expected: true, actual: params.autoApprove
-               }
-           }
-
-           steps {
-               script {
-                    def plan = readFile 'terraform/tfplan.txt'
-                    input message: "Do you want to apply the plan?",
-                    parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
-               }
-           }
-       }
-
-        stage('Apply') {
-            steps {
-                sh "pwd;cd terraform/ ; terraform apply -input=false tfplan"
-            }
         }
     }
-
-  }
+}
