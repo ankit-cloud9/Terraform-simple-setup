@@ -15,7 +15,7 @@ pipeline {
                  script{
                         dir("terraform")
                         {
-                            git "https://github.com/ankit-cloud9/Terraform-Jenkins-Infra-Creation.git"
+                            git "https://github.com/ankit-cloud9/Terraform-simple-setup.git"
                         }
                     }
                 }
