@@ -4,7 +4,7 @@ resource "aws_secretsmanager_secret" "new_secret" {
 }
 
 resource "aws_secretsmanager_secret_version" "new" {
-  secret_id = aws_secretsmanager_secret.new.id
+  secret_id = aws_secretsmanager_secret.new_secret.id
 
   secret_string = jsonencode({
     rds_endpoint = aws_db_instance.rds.endpoint
