@@ -1,9 +1,9 @@
-resource "aws_secretsmanager_secret" "new" {
-  name = "project/dev/secret-v2"
+resource "aws_secretsmanager_secret" "new_secret" {
+  name = "new/secret"
   recovery_window_in_days = 0
 }
 
-resource "aws_secretsmanager_secret_version" "new_value" {
+resource "aws_secretsmanager_secret_version" "new" {
   secret_id = aws_secretsmanager_secret.new.id
 
   secret_string = jsonencode({
